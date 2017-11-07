@@ -1,4 +1,4 @@
-defmodule ExGrayLog.TcpTransport do
+defmodule ExGrayLog.SSLTransport do
     @behaviour ExGrayLog.TransportBehavior
     use GenServer
     
@@ -6,7 +6,7 @@ defmodule ExGrayLog.TcpTransport do
 
     require Logger
 
-    alias ExGrayLog.TcpTransport
+    alias ExGrayLog.SSLTransport
 
     defstruct [
         :host, :port, :tref, 
@@ -22,12 +22,12 @@ defmodule ExGrayLog.TcpTransport do
     end
 
 
-    def init([host, port, _opts]) do 
-        state = %TcpTransport{
+    def init([host, port, opts]) do 
+        state = %SSLTransport{
             :host => to_char_list(host), 
             :port => port, 
             :socket => :nil,
-            :transport_opts => [:binary, active: true],
+            :transport_opts => [:binary, {:active, :true}, {:server_name_indication, :disable}] ++ opts,
             :connected => :false}
         new_state = init_connection_timer(state)
         {:ok, new_state}
@@ -36,7 +36,7 @@ defmodule ExGrayLog.TcpTransport do
     def handle_info(:connect, state) do
         transport_opts = state.transport_opts
         
-        state = case :gen_tcp.connect(state.host, state.port, transport_opts) do
+        state = case :ssl.connect(state.host, state.port, transport_opts) do
             {:ok, socket} -> 
                 Logger.info "Connected to graylog"
                 %{state | socket: socket, connected: :true}
@@ -48,7 +48,7 @@ defmodule ExGrayLog.TcpTransport do
         {:noreply, state}
     end
 
-    def handle_info({:tcp_closed, _socket}, state) do 
+    def handle_info({:ssl_closed, _socket}, state) do 
         Logger.error "Connection to graylog closed"
         {:noreply, init_connection_timer(%{state | socket: :undefined, connected: :false})};
     end
@@ -63,7 +63,7 @@ defmodule ExGrayLog.TcpTransport do
     end
 
     def handle_call({:message, message}, _from, state) do
-        :gen_tcp.send(state.socket, <<message::binary, 0::8>>)
+        :ssl.send(state.socket, <<message::binary, 0::8>>)
         {:reply, :ok, state}
     end
 

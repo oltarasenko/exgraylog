@@ -1,7 +1,6 @@
 defmodule ExGrayLog.Transport do
     use GenServer
 
-    @connect_interval 1 * 10 * 1000
     require Logger
     
     alias ExGrayLog.Transport
@@ -24,16 +23,13 @@ defmodule ExGrayLog.Transport do
 
         transport_backend = case transport.protocol do
             :tcp -> ExGrayLog.TcpTransport
+            :ssl -> ExGrayLog.SSLTransport
             other ->
                 Logger.error "#{other} transport module is not supported yet"
                 Process.exit(self(), :transport_protocol_not_supported)
         end
-        Logger.error "Wrapper PID: #{inspect self()}"
-        {_pid, _ref} = Kernel.spawn_monitor(
-            fn() -> 
-                transport_backend.start_link(transport.host, transport.port, transport.opts) 
-            end
-        )
+        {:ok, pid} = transport_backend.start_link(transport.host, transport.port, transport.opts) 
+        Process.monitor(pid)
 
         state = %Transport{:transport_backend => transport_backend}
         {:ok, state}

@@ -35,11 +35,11 @@ config :exgraylog,
         %{
             :host     => "127.0.0.1",
             :port     => 12202,
-            :protocol => :tcp,
+            :protocol => :ssl,
             :opts     => [
-                {:certfile, "/tmp/private.cert"},
-                {:keyfile, "/tmp/private.key"},
-                {:cacertfile, "/tmp/root.cert"},
+                {:certfile, "/tmp/certs/app.crt"},
+                {:keyfile, "/tmp/certs/app.key"},
+                {:cacertfile, "/tmp/certs/ca.crt"},
                 {:verify, :verify_peer}
             ]
         }
