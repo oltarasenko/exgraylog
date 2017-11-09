@@ -30,6 +30,7 @@ use Mix.Config
 #     import_config "#{Mix.env}.exs"
 
 config :exgraylog,
+    enabled: :true,
     autosend_logs: :true,
     transport: 
         %{

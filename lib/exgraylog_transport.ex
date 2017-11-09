@@ -19,6 +19,13 @@ defmodule ExGrayLog.Transport do
 
 
     def init([]) do 
+        case Application.get_env(:exgraylog, :enabled, :false) do
+            :false -> :ignore
+            :true  -> init_state()
+        end
+    end
+
+    defp init_state() do
         transport = Application.fetch_env!(:exgraylog, :transport)
 
         transport_backend = case transport.protocol do

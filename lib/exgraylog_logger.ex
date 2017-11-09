@@ -11,8 +11,14 @@ defmodule ExGrayLog.Logger do
     end
 
     def init([]) do
-        Logger.add_backend(ExGrayLog.Handler, [])
-        {:ok, :nostate}
+        app_enabled = Application.get_env(:exgraylog, :enabled, :false)
+        autosend_logs = Application.get_env(:exgraylog, :autosend_logs, :false)
+        case {app_enabled, autosend_logs} do
+            {:true, :true} ->
+                Logger.add_backend(ExGrayLog.Handler, [])
+                {:ok, :nostate}
+            _  -> :ignore
+        end
     end
 
 

@@ -8,13 +8,11 @@ defmodule ExGrayLog.Sup do
 
     def init([]) do
         
-        children = [worker(ExGrayLog.Transport, [], [restart: :permanent])]
-        children = case Application.get_env(:exgraylog, :autosend_logs, :false) do
-            :false -> children
-            :true  -> 
-                children ++ [worker(ExGrayLog.Logger, [], [restart: :permanent])]
-            
-        end
+        children = [
+            worker(ExGrayLog.Transport, [], [restart: :permanent]),
+            worker(ExGrayLog.Logger, [], [restart: :permanent])
+        ]
+        
         supervise(children, strategy: :one_for_one)
     end
 end
