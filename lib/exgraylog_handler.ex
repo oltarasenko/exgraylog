@@ -19,10 +19,17 @@ defmodule ExGrayLog.Handler do
         end
 
         formatted_message = format_message(metadata, message)
+        short_message = case String.length(formatted_message) do
+            res when res > 20 ->
+                short_message = String.slice(formatted_message, 0..20)
+                "#{short_message} ... \""
+            _ -> formatted_message
+        end
         {:ok, msg} = Poison.encode(%{
             :version => <<"1.0">>, 
             :host => Node.self(),
-            :message => formatted_message,
+            :message => "#{short_message}",
+            :full_message => formatted_message,
             :level => mapped_level, 
             :timestamp => timestamp(),
         })
